@@ -1,0 +1,20 @@
+The logic of your program
+
+
+Why does your program work?
+
+
+The meaning, initial value and the use of each variable. Explain why their initial values and uses are correct. Justify your claim.
+
+
+Can we use asynchronous channels to solve this problem? If you say "yes", prove it with a convincing argument. If you say "no", show a counter-example.
+
+
+If the last thread in the chain receives a number larger than the one this thread memorized, then the incoming number must be a prime number. Why is this true? Prove this fact with a convincing argument.
+
+
+Do you really need a mutex to protect the global array Primes when a prime thread is saving its memorized prime number? If you say "yes", prove it with a convincing argument. If you say "no", show a counter-example.
+
+
+You must terminate your program gracefully. More precisely, The last three output lines must be printed by Master
+

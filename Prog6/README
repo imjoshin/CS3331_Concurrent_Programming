@@ -1,0 +1,49 @@
+1. My program begins execution by creating the master thread. The master
+thread starts and creates P2. It then sends integers 3 to max to P2, where
+max is the number to the main program. Aftwerward, END will be sent to P2.
+P2 will then use the given algorithm to determine if the received number is 
+prime. If a number is found to be prime, a new P thread will be created and
+it will memorize the prime number. Each new thread created will have a channel
+to the last, through which numbers are passed. Each thread created will
+continuously read until the END signal is received. Once the END signal is
+received, the thread will send END to the next thread and wait for it to
+terminate. Once the last thread receives the signal, it will terminate, which
+will cause its predecessor to terminate, and continue back to master. Master
+will print the result and exit.
+
+2. My program works because no thread is ever accessing the same portion of
+memory, so no mutual exclusion techniques are needed. A channel is created
+between any thread and its predecessor, so values are able to be communicated
+between multiple threads.
+
+3. The masterThread class only contains one private variable. This is max,
+which is the upper limit of prime number generations. It is initialized
+to the integer passed into the program through the terminal. The pThread
+class has three class variables. These are i, n, and max. i represents
+which number thread it is. If it was the third thread created, i would
+be initialized to 3. n is the number 'memorized' by the thread, which
+will always be a prime number. max, like the masterThread, is the integer
+passed into the program.
+
+4. Asynchronous channels would still work for this problem. This is because
+messages are sent down the line (each consecutive thread). No synchonization
+is needed due to the fact that each thread is dependent on the previous
+thread's output.
+
+5. All integers are able to be produced by multiple prime numbers together. 
+All threads created in this program contain consecutive primes numbers,
+starting at 2. Each thread determines if the number received from its
+predecessor is divisible by its prime number and ignores it if it is.
+Once a number reaches the last thread, if it is not divisible by the last 
+thread's prime, it must also be prime because it is not a multiple of any other
+prime.
+
+6. No. The Primes global array is shared by all threads, but each element in
+the array is only being accessed by a single thread. Mutual exclusion is not
+needed in this case because there will never be a time that two threads try
+to write to the same space in memory. This is because each thread is assigned
+a number (i) and will only write to that index in Primes.
+
+7. My program terminates gracefully because each thread waits for its successor
+to complete and then calls Exit. The master thread calls join on P2 and will
+terminate after P2 completes.

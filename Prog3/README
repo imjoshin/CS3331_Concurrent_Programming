@@ -1,0 +1,39 @@
+                                                                               |
+    The logic of your program
+
+    Why does your program work?
+
+
+    Question: At any time, there are no more than m baby eagles eating.
+
+
+    Question: A baby eagle must wait when he wants to eat but has no free feeding pot and/or all free feeding pots are all empty.
+
+
+    Question: If there is a non-empty feeding pot, a hungry and ready-to-eat baby eagle can eat.
+
+
+    Question: No hungry baby eagle will eat using an empty feeding pot.
+
+
+    Question: At any time, a feeding pot can only be used by one eating baby eagle.
+
+
+    Question: Only one baby eagle among all baby eagles who want to eat can wake up the mother eagle.
+
+
+    Question: The mother eagle does not run until a baby eagle wakes her up.
+
+
+    Question: While the mother eagle is preparing food, no baby eagle can wake up the mother again until the mother goes back to take a nap.
+
+
+    Question: Before all m feeding pots are filled, no hungry baby eagle can eat.
+
+
+    Question: Once the feeding pots are refilled, the mother eagle must allow baby eagles to eat. Then, she goes back to sleep.
+
+
+    Question: You must terminate your program gracefully. More precisely, if t feedings are needed, then your program cannot terminate right after the mother eagle refills the feeding pots t times. Instead, your program must wait until all feeding pots become empty, even though there may be baby eagles waiting for food. How do you implement this requirement?
+
+

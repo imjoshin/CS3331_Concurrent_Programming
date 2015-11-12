@@ -1,0 +1,96 @@
+When the program starts and initialization occurs, a mother and n children
+threads are created. The mother waits and is only called upon when needed
+by the wake and refill semaphores. When a baby eagle discovers the pots need
+to be refilled, it signals the refill semaphore. The last baby eagle to finish
+eating will wake up the mother, who will begin refilling the pots. No child
+is able to access the pots at this time, as the child who called the mother to
+refill is in the mutex that controls the "start eating" portion.
+
+My program works because it maintains mutual exclusion principles and
+threads only signal/wait on semaphores when needed.
+
+There will never be more than m baby eagles eating. This is because whenever
+the number of pots is 0 (m eagles are eating), the first baby eagle to
+discover this notifies the mother eagle, who will wait for all babies
+to finish eating and refill. This happens through the use of two Mutexes.
+In my program, they are called 'filling' and 'mtx'. Filling and mtx are both
+locked when a baby prepares to eat. If the number of pots is equal to 0,
+mtx will be unlocked to allow other babies to continue eating. Refill is
+still locked so no other babies can begin eating.
+
+A baby eagle must wait when he wants to eat but has no free feeding pots or
+all free feeding pots are empty. This is achieved by the use of the mtx and
+filling Mutexes. When a baby eagle wishes to eat, he must wait until he can
+pass through the locks of mtx and filling. Upon achieving mutual exclusion,
+this baby eagle will wake up the mother if there are no pots left. Otherwise,
+it will be ready to eat from an available pot. 
+
+If there is a non-empty feeding pot, a hungry and ready-to-eat baby eagle can
+eat. When a hungry baby eagle calls ready_to_eat and gets through the two Mutex
+locks and determines there is a non-emtpy pot, the thread will increment
+numEating and decrement numPots. The baby eagle then begins eating. 
+
+It is impossible for a hungry baby eagle to eat using an empty feeding pot.
+A counter is kept to signify how many non-empty, non-used pots are remaining.
+If this counter is never incremented (until refilled) and is used to assign
+a baby eagle a pot. When the number of pots remaining hits 0, the next baby
+eagle to attempt eating will wake up the mother to refill the pots. 
+
+At any time, a feeding pot can only be used by one eating baby eagle because
+the feeding pot indices are calculated using a counter. As soon as one baby
+eagle begins feeding, the next pot will be ready. The pot counter is 
+decremented inside the Mutex lock, so no other baby eagle is able to use
+the same pot.
+
+Only one baby eagle among all baby eagles who want to eat can wake up the
+mother eagle. This is enforced by the Mutex filling, which signifies that
+a baby eagle is calling for the mother. When a baby eagle calls ready_to_eat
+and passes through the filling and mtx locks, no other baby eagle is able to
+enter that section until filling and mtx is unlocked. If numPots == 0 and the
+game is not over, the baby eagle that entered will wake up the mother. The
+filling mutex is not unlocked until that eagle is completely finished with its
+task. 
+
+The mother eagle does not run until a baby eagle wakes her up. This occurs
+because the mother has two semaphores: wake and refill. Each iteration of the
+mother, both of these semaphores are waited on. The refill semaphore is
+signalled when a baby eagle discovers all of the pots are empty. The wake
+semaphore is called when a baby eagle discovers all of the pots are empty.
+When these two conditions are satisfied, the mother will refill the pots.
+While at least one of these semaphores are waiting, the mother will be asleep.
+
+While the mother eagle is preparing food, no baby eagle can wake up the mother
+again until the mother goes back to take a nap because all baby eagles wait
+upon the mother to finish refilling the pots. This property is maintained
+because the baby eagle that woke the mother will be inside the filling mutex.
+This baby eagle doesn't unlock the mutex until it is done with its function.
+When this baby eagle calls the mother to wake up, it is still holding onto
+the filling Mutex, and doesn't move foward with its task until the pots are
+filled and the mother goes to sleep.
+
+Before all m feeding pots are filled, no hungry baby eagle can eat. This is
+because the filling mutex locks out all other baby eagles besides the first
+to reach it. The first baby eagle to reach the mutex will discover there are
+no pots and wakes the mother to fill them. The baby eagle that called the
+mother holds onto the filling mutex, not allowing any other babies to request
+eating until the pots are filled by the mother, which allows the baby who
+woke her to continue and unlock the filling mutex.
+
+Once the feeding pots are refilled, the mother eagle must allow baby eagles
+to eat. Then, she goes back to sleep. This is maintained by the use of the 
+semaphore finished. At the end of the mother's iteration, she waits until
+finished is singalled. Finished is not signalled until a baby eagle discovers
+it is the last one eating, based on 'numEating == 0 && numPots == 0'. If this
+condition is satisfied, finished will be signalled at the mother will be able
+to go to sleep when she begins her next iteration.
+
+My program terminates gracefully and any baby eagles waiting for food will also
+exit gracefully. This is handled by the finished semaphore and the mother's
+private variable retiring. Once the mother's t iterations are completed, her
+retiring variable is set to true. When all pots are empty on the last
+iteration, a baby eagle will discover this. An nested if statement in the last
+pot condition detects if the mother is retiring. If the baby eagle detects it
+should exit, it will unlock mtx and filling and call Exit(). At this point, 
+other baby eagles will be able to enter this locked section. They will also
+discover all the pots are empty, and continue in the same manner as the first.
+

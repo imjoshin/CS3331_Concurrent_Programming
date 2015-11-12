@@ -1,0 +1,32 @@
+
+#include <ThreadClass.h>
+
+#define END -1
+
+extern int* Primes;
+
+class masterThread : public Thread
+{
+	public:
+		masterThread(int max);
+	
+	private:
+		void ThreadFunc();
+		int max;
+		char pre[50];
+};
+ 
+
+class pThread : public Thread
+{
+	public:
+		pThread(int i, int n, int max);
+		SynOneToOneChannel* channel;
+	
+	private:
+		void ThreadFunc();
+		int i; 			//number of thread created
+		int n;			//prime number to remember
+		int max;		//2 to max prime numbers
+		char pre[50];
+};

@@ -1,0 +1,77 @@
+The main portion of my program is rather simple. The main process creates e
+east baboon threads and w west baboon threads, and waits for those processes to
+complete their function. The rope monitor is also created in the main process.
+Each thread starts up and initializes its class variables. A for loop is
+executed in each thread to have the baboon cross the rope t times. Within the
+for loop, the baboon first tries to get on the rope. If there are no baboons
+on the rope or there are baboons traveling in the same direction as the current
+one, it will be able to cross. Otherwise, it must wait until another baboon
+signals it. When a baboon is able to cross, it will signal other baboons to
+cross in the same direction if none are waiting on the other side. The baboon
+then takes time to cross the rope. When it is time to get off the rope, the 
+baboon will signal a waiting baboon if it is the last on the rope. If there
+are some waiting on the other side, it will signal one of those. Otherwise,
+it will signal a baboon of the same side.
+
+My program works because mutual exclusion is maintained through the use of a
+monitor. Whenever a baboon wishes to get on the rope, it must wait until the
+baboon that is currently using the monitor signals it. When a baboon gets off of
+the rope, it will eventually gain access to the monitor and signal a waiting
+baboon. The RopeMonitor class handles all interactions between different
+threads.
+
+Within the eastThread and westThread classes, 3 private variables exist. t 
+represents how many crossings the baboon will make. i represents the index 
+number of the baboon. pre is used when printing the output to stdout. It
+contains the direction, baboon index, and the spaces needed before the output.
+Within the monitor, there are 4 variables. waitingLine is an array of Condition
+variables of length 2. Index 0 represents the baboons waiting in line move west,
+and index 1 represents the baboons waiting in line to move east. These variables
+control the flow of baboons across the rope because baboons will be held until
+another signals it, allowing it to move. dir represents the current direction
+of flow across the rope, either 0 or 1. This variable is not initialized at 
+first, as there are no baboons crossing. Whenever a baboon gets on the rope,
+dir is set to the direction of the baboon. numBaboons represents the current
+number of baboons on the rope. This is initialized to 0, as no baboons start
+on the rope. When a baboon gets on and off the rope, numBaboons is incremented
+and decremented, respectively. The waiting variable is an int array of length 2.
+This variable keeps track of how many baboons are waiting on each side of the
+rope, and both elements are intialized to 0 as no baboons are waiting to cross
+at the start of the program.
+
+Baboons on the rope only move in the same direction. When a baboon approaches
+the rope and asks if it can cross, it will only get a positive response if
+there are no baboons on the rope (there is no set direction) or the current
+direction of the monitor is the same as the baboons direction. If a baboon
+doesn't meet either of these conditions, it will have to wait until it is
+signalled. There are only two times a baboon can be signalled. One is when o
+ne baboon successfully gets on the rope and no baboons on the other side are 
+waiting, so it will get on in the same direction. The other time a baboon
+is signalled is when it is the last on the rope and is getting off, but in
+this case, there will be no direction until one gets on.
+
+Baboons must use the rope to cross the canyon. This is because each in each
+iteration of a crossing, a baboon calls getOnRope(). Within that method, a
+baboon will cross using the rope if canCross is true. If not, the baboon must
+begin waiting. Once it is signalled, it will continue and cross using the rope.
+In either outcome, the baboon must cross using the rope.
+
+No baboon can get on the rope without a permission. This is enforced by the
+if(!canCross(dir)) section in getOnRope(). As mentioned earlier, canCross() will
+return true only if the baboon meets the requirements to cross. If this does not
+happen, the baboon must wait until the conditions are met, in which case another
+will signal that baboon and allow it to cross.
+
+When a baboon arrives and there are baboons on the rope moving in the opposite 
+direction, no baboon can get on the rope and move in the opposite direction.
+This is enforced by the canCross method. When a baboon tries to get on the rope
+and there are baboons on the rope, canCross will return true if and only if 
+this baboon's direction is the same as that of the rope. 
+If an eastward-moving baboon arrives and there are a number of westward-moving 
+baboons on the rope, then no other westward-moving baboons, whether they are 
+waiting or just arrive, can be on the rope. This is also handled by the canCross
+method. If there are baboons on the rope and this baboon's direction is the same
+as the rope, the condition of 'waiting[1 - dir] == 0' must be true if the baboon
+is able to cross. This means that there are no baboons waiting on the opposite
+side. Also, when a baboon gets off of the rope and it is the last one, it will
+signal one of the baboons waiting on the other side if there is one.

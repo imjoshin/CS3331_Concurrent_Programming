@@ -1,0 +1,54 @@
+The logic of your program
+When the program starts and initialization occurs, a mother and n children
+threads are created. The mother waits and is only called upon when needed
+by the wake and refill semaphores. When a baby eagle discovers the pots need
+to be refilled, it signals the refill semaphore. The last baby eagle to finish
+eating will wake up the mother, who will begin refilling the pots. No child
+is able to access the pots at this time, as the child who called the mother to
+refill is in the mutex that controls the "start eating" portion.
+
+Why does your program work?
+My program works because it maintains mutual exclusion principles and
+threads only signal/wait on semaphores when needed.
+
+
+
+Convince me that your program works properly. More precisely, answer the following questions. Make sure you will have a convincing argument for each question.	
+Note that argument such as because a semaphore is used to ....., the indicated situation cannot happen" will not be counted as convincing. 
+You should explain why the situation will not happen through the use of a semaphore or semaphores. Providing arguments like that will receive low or very low grade.
+
+
+Question: At any time, there are no more than m baby eagles eating.
+There will never be more than m baby eagles eating. This is because 
+
+Question: A baby eagle must wait when he wants to eat but has no free feeding pot and/or all free feeding pots are all empty.
+
+
+Question: If there is a non-empty feeding pot, a hungry and ready-to-eat baby eagle can eat.
+
+
+Question: No hungry baby eagle will eat using an empty feeding pot.
+
+
+Question: At any time, a feeding pot can only be used by one eating baby eagle.
+
+
+Question: Only one baby eagle among all baby eagles who want to eat can wake up the mother eagle.
+
+
+Question: The mother eagle does not run until a baby eagle wakes her up.
+
+
+Question: While the mother eagle is preparing food, no baby eagle can wake up the mother again until the mother goes back to take a nap.
+
+
+Question: Before all m feeding pots are filled, no hungry baby eagle can eat.
+
+
+Question: Once the feeding pots are refilled, the mother eagle must allow baby eagles to eat. Then, she goes back to sleep.
+
+
+Question: You must terminate your program gracefully. More precisely, if t feedings are needed, then your program cannot terminate right after the mother eagle 
+refills the feeding pots t times. Instead, your program must wait until all feeding pots become empty, even though there may be baby eagles waiting for food. How do you implement this requirement?
+
+

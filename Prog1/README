@@ -1,0 +1,47 @@
+Question 1.
+-> means "is the parent of"
+Parent -> child1 -> child2 -> child3
+	With the command line argument '4', 4 processes are created including
+the parent (3 forks). The parent is executed and begins the for loop. In the
+first iteration, the original process will fork. If the return value of fork
+is greater than 0 (the parent), then the loop will break and print the
+result. The child of the fork will then continue the for loop because it's
+result of the fork was 0. The loop will iterate again and the same steps will
+occur - parent breaks, child iterates. Each process will have no more than one
+child.
+
+Question 2.
+-> means "is the parent of"
+       -> child1
+Parent -> child2
+       -> child3
+       -> child4
+	With the command line argument '4', 5 processes are created including
+the parent (4 forks). The parent is executed and begins the for loop. In the
+first iteration, the original process will fork. If the return value of fork is
+greater than 0 (the parent), then the loop will break and print the result. The
+child of the fork will then continue the for loop because it's result of the
+fork was 0. The loop will iterate again and the same steps will occur - parent
+breaks, child iterates. Each process will have no more than one child.
+
+Question 3.
+-> means "is the parent of"
+				 ->child8
+			 ->child4->child9
+				
+		-> child2->child5->child10
+				 ->child11
+Parent -> child1
+		-> child3->child6->child12
+				 ->child13
+
+			 ->child7->child14
+				 ->child15
+With the command line argument '4', 16 processes are created including the parent
+(15 forks). The parent is executed and begins the for loop. In the first iteration,
+the original process will fork once and break. Each consecutive child will fork
+twice and break out of the loop, printing its result. The number of processes
+created is 2^n, where n is the argument passed.
+
+
+

@@ -1,0 +1,184 @@
+// ----------------------------------------------------------- 
+// NAME : Josh Johnson                       User ID: jocjohns 
+// DUE DATE : 04/03/2015                                       
+// PROGRAM ASSIGNMENT #4                                        
+// FILE NAME : thread.cpp           
+// PROGRAM PURPOSE :                                           
+//    This program takes three integers as input and simulates
+//  a game of baby eagles and a mother eagle. Each baby eagle
+//  is its own thread and eats food in the specified number of
+//  pots, which is fetched by the mother.
+//
+//    This file handles the basic thread functions.       
+// ----------------------------------------------------------- 
+
+#include <string.h>
+#include <stdio.h>
+#include "thread.h"
+
+
+
+
+
+// ----------------------------------------------------------- 
+// FUNCTION  babyThread::babyThread :                      
+//     This function is executed by any babyThread thread.
+//  It initializes the values needed for this thread's job.                   
+// PARAMETER USAGE :                                           
+//     I - the number of baby eagle 
+//     M - the number of total pots            
+// FUNCTION CALLED :                                           
+//     ThreadName.seekp
+// -----------------------------------------------------------
+babyThread::babyThread(int I, int M, motherThread* motherT)
+{
+	this->i = I;
+	this->m = M;
+	this->mother = motherT;
+	ThreadName.seekp(0, ios::beg);
+	ThreadName << "BabyEagle" << I << '\0';
+}
+
+// ----------------------------------------------------------- 
+// FUNCTION  babyThread::ThreadFunc :                      
+//     This function is executed by any babyThread thread.
+//  It simulates the function of a baby eagle.                          
+// PARAMETER USAGE :                                       
+//           
+// FUNCTION CALLED :                                           
+//     sprintf, write, ready_to_eat, finish_eating, Exit
+// -----------------------------------------------------------
+
+void babyThread::ThreadFunc()
+{
+	Thread::ThreadFunc();
+	int n = this->i;
+
+	char output[200];
+	char spaces[25];
+	int i;
+
+	sprintf(spaces, "");
+	for(i = 0; i < n; i++)
+		sprintf(spaces, "%s ", spaces);
+
+	sprintf(output, "%sBaby eagle %d started.\n", spaces, i);
+	write(1, output, strlen(output));
+
+	while(!this->mother->retiring)
+	{
+		ready_to_eat();
+		//eating
+		sprintf(output, "%sBaby eagle %d is eating using feeding pot %d.\n", spaces, this->i, this->pot);
+		write(1, output, strlen(output));
+
+		for (i = 0; i < rand(); i++)
+			Delay();
+
+		finish_eating();
+	}
+
+	Exit();
+};
+
+
+
+
+
+
+
+// ----------------------------------------------------------- 
+// FUNCTION  motherThread::motherThread :                      
+//     This function is executed by any motherThread thread.
+//  It initializes the values needed for this thread's job.                   
+// PARAMETER USAGE :                                           
+//     T - the number of feedings
+//     M - the number of total pots            
+// FUNCTION CALLED :                                           
+//     ThreadName.seekp
+// -----------------------------------------------------------
+
+motherThread::motherThread(int T, int M)
+{
+	this->t = T;
+	this->m = M;
+	ThreadName.seekp(0, ios::beg);
+	ThreadName << "MotherEagle" << '\0';
+}
+
+// ----------------------------------------------------------- 
+// FUNCTION  motherThread::ThreadFunc :                      
+//     This function is executed by any motherThread thread.
+//  It simulates the function of a mother eagle.                          
+// PARAMETER USAGE :                                       
+//           
+// FUNCTION CALLED :                                           
+//     sprintf, write, goto_sleep, food_ready, Exit
+// -----------------------------------------------------------
+
+void motherThread::ThreadFunc()
+{
+	Thread::ThreadFunc();
+	
+	char output[200];
+	sprintf(output, "Mother eagle started.\n");
+	write(1, output, strlen(output));
+
+	int i, j;
+	int t = this->t;
+	for(i = 1; i <= t; i++)
+	{
+		this->i = i;
+		goto_sleep();
+
+		//sleeping
+		for (j = 0; j < rand(); j++)
+			Delay();
+
+		//prepare food
+		sprintf(output, "Mother eagle is awoke by baby eagle %d and starts preparing food.\n", this->wokenBy);
+		write(1, output, strlen(output));
+	
+		numPots = this->m;
+		pots->Signal();
+
+
+		//food is prepared
+		food_ready();
+
+		
+		char output[200];
+		sprintf(output, "Mother eagle takes a nap.\n");
+		write(1, output, strlen(output));
+
+		finished->Wait();
+	}
+
+	this->retiring = true;
+	mtx->Unlock();
+	filling->Unlock();
+	pots->Signal();
+
+	sprintf(output, "Mother eagle retires after serving %d feedings. Game is over!!!\n", t);
+	write(1, output, strlen(output));
+
+	Exit();
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

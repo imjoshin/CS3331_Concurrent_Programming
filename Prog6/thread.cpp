@@ -1,0 +1,236 @@
+// ----------------------------------------------------------- 
+// NAME : Josh Johnson                       User ID: jocjohns
+// DUE DATE : 4/24/15            
+// PROGRAM ASSIGNMENT #6                                        
+// FILE NAME : thread.cpp           
+// PROGRAM PURPOSE :                                           
+//    This program computes prime numbers using multiple
+//  threads and channels between those threads. Each thread
+//  created 'remembers' a prime number once it has been 
+//  computed and finds the next prime number. The result of
+//  the prime numbers in the range 2 to n are printed out, 
+//  where n is a passed argument.
+//
+//    This is the thread functions file.      
+// ----------------------------------------------------------- 
+
+#include <string.h>
+#include <stdio.h>
+#include "thread.h"
+
+
+// ----------------------------------------------------------- 
+// FUNCTION  masterThread::masterThread :                        
+//     This function is executed by the masterThread thread.
+//  It initializes the values needed for this thread's job.                          
+// PARAMETER USAGE :                                           
+//    max - The upper range of prime numbers generated           
+// FUNCTION CALLED :                                           
+//    Threadname->seekp      
+// -----------------------------------------------------------
+
+masterThread::masterThread(int max)
+{
+
+	ThreadName.seekp(0, ios::beg);
+	ThreadName << "master" << '\0';
+	UserDefinedThreadID = 0;
+	this->max = max;
+
+}
+
+// ----------------------------------------------------------- 
+// FUNCTION  masterThread::threadFunc :                        
+//     This function is executed by the masterThread thread.
+//  It starts the P2 thread and sends numbers 3 to n through
+//  a channel that connects the master to P2. Afterward, it
+//  sends an END signal. 
+//     After sending all integers, it prints out the prime
+//  numbers that were calculated.                         
+// PARAMETER USAGE :                                           
+//             
+// FUNCTION CALLED :                                           
+//    sprintf, write, pThread->pThread, 
+//  SynOneToOneChannel->Send, Thread->Join, Exit   
+// -----------------------------------------------------------
+
+void masterThread::ThreadFunc()
+{
+	Thread::ThreadFunc();
+	
+	char output[200];
+	sprintf(output, "Master starts\n");
+	write(1, output, strlen(output));
+
+	pThread* p2 = new pThread(1, 2, max);
+	p2->Begin();
+
+
+	int i;
+
+	//send integers 3 to max to p2
+	for(i = 3; i <= max; i++)
+	{
+		sprintf(output, "Master sending %d to P2\n", i);
+		write(1, output, strlen(output));
+		p2->channel->Send(&i, sizeof(int));
+	}
+
+	//send END signal
+	sprintf(output, "Master sends END\n");
+	write(1, output, strlen(output));
+	int end = END;
+	p2->channel->Send(&end, sizeof(int));
+
+	//wait for p2 to complete
+	p2->Join();
+
+	//print results
+	sprintf(output, "Master prints the complete result:\n ", i);
+	for(i = 1; i < max; i++)
+	{
+		if(Primes[i] == 0) break;
+		sprintf(output, "%s %d", output, Primes[i]);
+	}
+	sprintf(output, "%s\n", output);
+	write(1, output, strlen(output));
+
+	sprintf(output, "Master terminates\n");
+	write(1, output, strlen(output));
+	Exit();
+};
+
+// ----------------------------------------------------------- 
+// FUNCTION pThread::pThread :                        
+//     This function is executed by any eastThread thread.
+//  It initializes the values needed for this thread's job.                          
+// PARAMETER USAGE :                                           
+//    i - The ith thread generated
+//    n - The number to save
+//    max - The upper range of prime numbers generated             
+// FUNCTION CALLED :                                           
+//    Threadname->seekp, sprintf, 
+//  SynOneToOneChannel->SynOneToOneChannel       
+// -----------------------------------------------------------
+
+pThread::pThread(int i, int n, int max)
+{
+
+	ThreadName.seekp(0, ios::beg);
+	ThreadName << "P" << n << '\0';
+
+	UserDefinedThreadID = i;
+	this->max = max;
+	this->n = n;
+	this->i = i;
+
+	char channelName[50];
+	sprintf(channelName, "Channel%d-%d", i, i + 1);
+	channel = new SynOneToOneChannel(channelName, i - 1, i);
+
+	int j;
+	char spaces[50];
+
+	//generate spaces
+	sprintf(spaces, "");
+	for(j = 0; j < i; j++)
+		sprintf(spaces, "%s  ", spaces);
+
+	//save message prefix
+	sprintf(pre, "%s", spaces);
+}
+
+
+// ----------------------------------------------------------- 
+// FUNCTION  pThread::threadFunc :                        
+//     This function is executed by any pThread thread.
+//  It will loop forever until an END signal is received from
+//  its predecessor. This function receives an integer from
+//  its predecessor and determines if it is a prime number.
+//  If so, it will create a new thread and create a channel.
+//  Once an END signal is received, it sends the end signal
+//  to the next thread and terminates.                        
+// PARAMETER USAGE :                                           
+//             
+// FUNCTION CALLED :                                           
+//    sprintf, write, pThread->pThread, 
+//  SynOneToOneChannel->Send, SynOneToOneChannel->Receive, 
+//  Thread->Join, Exit
+// -----------------------------------------------------------
+
+void pThread::ThreadFunc()
+{
+	Thread::ThreadFunc();
+
+	char output[200];
+	sprintf(output, "%sP%d starts and memorizes %d\n", pre, n, n);
+	write(1, output, strlen(output));
+
+	//write saved value to Primes
+	Primes[i] = n;
+
+	int j;
+	int k;
+	int end = END;
+	int isLast = 1;
+
+	pThread* pk;
+
+	//sprintf(output, "%sP%d starting for loop\n", pre, n);
+	//write(1, output, strlen(output));
+	while(1)
+	{
+		//get integer from predecessor
+		channel->Receive(&k, sizeof(int));
+		if(k != END)
+		{
+			sprintf(output, "%sP%d receives %d\n", pre, n, k);
+			write(1, output, strlen(output));
+
+			//k is a multiple of n, not prime
+			if(k % n == 0)
+			{
+				sprintf(output, "%sP%d ignores %d\n", pre, n, k);
+				write(1, output, strlen(output));
+			}
+			else
+			{
+				//create thread if needed
+				if(isLast)
+				{
+					sprintf(output, "%sP%d creates P%d\n", pre, n, k);
+					write(1, output, strlen(output));
+					pk = new pThread(i + 1, k, max);
+					pk->Begin();
+					isLast = 0;
+				}
+				else
+				{
+					sprintf(output, "%sP%d sends %d to P%d\n", pre, n, k, pk->n);
+					write(1, output, strlen(output));
+					pk->channel->Send(&k, sizeof(int));
+				}
+			}
+		}
+		//received END signal
+		else
+		{
+			sprintf(output, "%sP%d receives END\n", pre, n);
+			write(1, output, strlen(output));
+
+			if(!isLast)
+			{
+				sprintf(output, "%sP%d sends END to P%d\n", pre, n, pk->n);
+				write(1, output, strlen(output));
+				//send end to next thread
+				pk->channel->Send(&end, sizeof(int));
+				pk->Join();
+			}
+			break;
+		}
+	}
+
+
+	Exit();
+};
+

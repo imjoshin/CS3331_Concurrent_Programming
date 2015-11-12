@@ -1,0 +1,34 @@
+1. My program creates shared memory for an input file that two child processes
+use concurrently. The merge child gets its necessary shared memory and
+creates a child process for each value in the two arrays. Each child process
+finds its location in the final, sorted array, and then exits. The qsort
+child creates a new process each time the array needs to split, according
+to the quick sort algorithm. As quick sort usually uses recursion to
+generate the sorted array, this program executes a new child each
+"recursive" step. For both of the children (merge and qsort), the result
+is stored in the shared memory that the main file created. Therefore,
+main.c can access the results and print them out.
+
+2. My program works because the shared memory is able to be accessed by any
+process that has the key to that section in memory. The permissions on 
+this section of memory are set so that it is writable, so other sections
+of code besides the main file can write.
+
+3. The main file allocates two sections of shared memory - one for qsort and
+one for merge. The qsort allocation contains the array 'a' and the size of
+'a'. The merge allocation contains the arrays 'x' and 'y', along with their
+sizes in addition to an array the size of the two combined (the result). 
+In qsort, the allocated struct is obtained. The memory is interacted
+with directly to obtain the sorted array. In merge, the 'x' and 'y' arrays
+are never written to, just the 'ret' (result) array. 
+
+
+4. No potential race conditions occur, as every process is accessing a different
+portion of the shared memory. Parent processes in qsort modify the memory the
+children access, but not at the same time.
+
+5. For qsort, I sent the left bound of the array, right bound of the array, and
+the total array size.
+
+6. For merge, I only sent the size of each array to be sorted.
+
